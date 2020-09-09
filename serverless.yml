@@ -62,6 +62,13 @@ functions:
           path: inboxes
           method: post
           cors: true
+  inboxesGet:
+    handler: handlers/inboxesGet.main
+    events:
+      - http:
+          path: inboxes/{id}
+          method: get
+          cors: true
 
 resources:
   # DynamoDB
