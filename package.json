@@ -1,0 +1,19 @@
+{
+  "name": "bottlenose-mail-api",
+  "version": "1.0.0",
+  "author": "Will Olson <will.olson11@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "serverless-bundle test"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.748.0",
+    "serverless-bundle": "^3.1.0",
+    "serverless-dotenv-plugin": "^3.0.0",
+    "serverless-offline": "^6.7.0"
+  },
+  "dependencies": {
+    "nanoid": "^3.1.12",
+    "uuid": "^8.3.0"
+  }
+}

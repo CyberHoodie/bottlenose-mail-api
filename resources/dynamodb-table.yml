@@ -1,0 +1,43 @@
+Resources:
+  InboxesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.inboxesTableName}
+      AttributeDefinitions:
+        - AttributeName: inboxId
+          AttributeType: S
+        - AttributeName: emailAddress
+          AttributeType: S
+      KeySchema:
+        - AttributeName: inboxId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailAddressIndex
+          KeySchema:
+            - AttributeName: emailAddress
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      # Set the capacity to auto-scale
+      BillingMode: PAY_PER_REQUEST
+  EmailsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.emailsTableName}
+      AttributeDefinitions:
+        - AttributeName: emailId
+          AttributeType: S
+        - AttributeName: emailAddress
+          AttributeType: S
+      KeySchema:
+        - AttributeName: emailId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: EmailAddressIndex
+          KeySchema:
+            - AttributeName: emailAddress
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      # Set the capacity to auto-scale
+      BillingMode: PAY_PER_REQUEST
