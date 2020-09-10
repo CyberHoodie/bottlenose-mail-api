@@ -15,6 +15,8 @@ custom:
   # Set the table name here so we can use it while testing locally
   inboxesTableName: ${self:custom.stage}-inboxes
   emailsTableName: ${self:custom.stage}-emails
+  emailsBucketName: bottlenosemail${self:custom.stage}emails
+  emailsBucketRef: S3BucketBottlenosemail${self:custom.stage}emails
 
 provider:
   name: aws
@@ -31,6 +33,10 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - s3:GetObject
+      Resource: "*"
+    - Effect: Allow
+      Action:
         - dynamodb:DescribeTable
         - dynamodb:Query
         - dynamodb:Scan
@@ -41,35 +47,50 @@ provider:
       # Restrict our IAM role permissions to
       # the specific table for the stage
       Resource:
-        - "Fn::GetAtt": [ InboxesTable, Arn ]
+        - Fn::GetAtt: [ InboxesTable, Arn ]
+        - Fn::Join: ['/', [{ Fn::GetAtt: [ InboxesTable, Arn ] }, 'index/*']]
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
         - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
+        - dynamodb:PutItem
         - dynamodb:DeleteItem
       # Restrict our IAM role permissions to
       # the specific table for the stage
       Resource:
-        - "Fn::GetAtt": [ EmailsTable, Arn ]
+        - Fn::GetAtt: [ EmailsTable, Arn ]
+        - Fn::Join: ['/', [{ Fn::GetAtt: [ EmailsTable, Arn ] }, 'index/*']]
 
 functions:
   inboxesCreate:
-    handler: handlers/inboxesCreate.main
+    handler: lambdas/inboxesCreate.main
     events:
       - http:
           path: inboxes
           method: post
           cors: true
   inboxesGet:
-    handler: handlers/inboxesGet.main
+    handler: lambdas/inboxesGet.main
     events:
       - http:
           path: inboxes/{id}
           method: get
           cors: true
+  emailAddressCheck:
+    handler: lambdas/emailAddressCheck.main
+  processEmail:
+    handler: lambdas/processEmail.main
+    events:
+      - s3:
+          bucket: ${self:custom.emailsBucketName}
+          event: s3:ObjectCreated:*
 
 resources:
   # DynamoDB
   - ${file(resources/dynamodb-table.yml)}
+  # S3
+  - ${file(resources/s3-bucket.yml)}
+  # SES Lambda Permissions
+  - ${file(resources/ses-lambda.yml)}

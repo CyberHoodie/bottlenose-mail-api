@@ -1,0 +1,20 @@
+Resources:
+  S3EMailBucketPermissions:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: ${self:custom.emailsBucketRef}
+      PolicyDocument:
+        Statement:
+          - Principal:
+              Service: "ses.amazonaws.com"
+            Action:
+              - s3:PutObject
+            Effect: Allow
+            Sid: "AllowSESPuts"
+            Resource:
+              Fn::Join: ['', ['arn:aws:s3:::', Ref: "${self:custom.emailsBucketRef}", '/*'] ]
+            Condition:
+              StringEquals:
+                aws:Referer:
+                  Ref: AWS::AccountId

@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "bottlenosemaildevemails"
+        },
+        "object": {
+          "key": "jiuibnd777062v50s6mhpn969alu66d7i2r286g1"
+        }
+      }
+    }
+  ]
+}

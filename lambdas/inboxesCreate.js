@@ -12,7 +12,7 @@ export const main = handler(async (event, context) => {
     // - 'createdAt': current Unix timestamp
     Item: {
       inboxId: uuid(),
-      emailAddress: `${nanoid(10)}@bottlenosemail.com`,
+      emailAddress: `${nanoid(10).toLowerCase()}@bottlenosemail.com`,
       createdAt: Date.now()
     }
   };

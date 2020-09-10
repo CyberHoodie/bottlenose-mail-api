@@ -1,0 +1,19 @@
+Resources:
+  GiveSESPermissionToInvokeEmailAddressCheckLambdaFunction:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt: [ EmailAddressCheckLambdaFunction, Arn ]
+      Principal: ses.amazonaws.com
+      Action: 'lambda:InvokeFunction'
+      SourceAccount:
+        Ref: AWS::AccountId
+  GiveSESPermissionToInvokeProcessEmailLambdaFunction:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt: [ ProcessEmailLambdaFunction, Arn ]
+      Principal: ses.amazonaws.com
+      Action: 'lambda:InvokeFunction'
+      SourceAccount:
+        Ref: AWS::AccountId
