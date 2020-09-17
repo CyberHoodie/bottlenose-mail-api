@@ -1,0 +1,3 @@
+# Bottlenose Mail API
+
+Welcome 👋
