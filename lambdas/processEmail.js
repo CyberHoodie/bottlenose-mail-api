@@ -19,7 +19,7 @@ export async function main(event, context) {
       Item: {
         emailId: uuid(),
         emailAddress: email.to.text,
-        date: email.date,
+        date: email.date.getTime(),
         subject: email.subject,
         from: email.from.text,
         bucketName: s3Params.Bucket,
