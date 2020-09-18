@@ -6,7 +6,7 @@
 
 List the emails for an inbox. Emails objects only contain common header values.
 
-## Body Parameters
+## Query Parameters
 
 | Field Name | Required | Description                    |
 |------------|----------|--------------------------------|

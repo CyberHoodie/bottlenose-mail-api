@@ -78,6 +78,13 @@ functions:
           path: inboxes/{id}
           method: get
           cors: true
+  emailsList:
+    handler: lambdas/emailsList.main
+    events:
+      - http:
+          path: emails
+          method: get
+          cors: true
   emailsGet:
     handler: lambdas/emailsGet.main
     events:
