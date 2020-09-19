@@ -108,3 +108,5 @@ resources:
   - ${file(resources/s3-bucket.yml)}
   # SES Lambda Permissions
   - ${file(resources/ses-lambda.yml)}
+  # API Gateway Errors
+  - ${file(resources/api-gateway-errors.yml)}
