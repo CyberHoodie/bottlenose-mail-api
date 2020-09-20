@@ -3,6 +3,14 @@ import { nanoid } from "nanoid";
 import handler from "../libs/handler-lib";
 import dynamoDb from "../libs/dynamodb-lib";
 
+function setEmailDomain() {
+  if (process.env.stage == "prod") {
+    return "bottlenosemail.com";
+  } else {
+    return "bottlenosemail-dev.com";
+  }
+}
+
 export const main = handler(async (event, context) => {
   const params = {
     TableName: process.env.inboxesTableName,
@@ -12,7 +20,7 @@ export const main = handler(async (event, context) => {
     // - 'createdAt': current Unix timestamp
     Item: {
       inboxId: uuid(),
-      emailAddress: `${nanoid(10).toLowerCase()}@bottlenosemail.com`,
+      emailAddress: `${nanoid(10).toLowerCase()}@${setEmailDomain()}`,
       createdAt: Date.now()
     }
   };

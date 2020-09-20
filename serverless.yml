@@ -27,6 +27,7 @@ provider:
   # These environment variables are made available to our functions
   # under process.env.
   environment:
+    stage: ${self:custom.stage}
     inboxesTableName: ${self:custom.inboxesTableName}
     emailsTableName: ${self:custom.emailsTableName}
 
