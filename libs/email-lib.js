@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import { simpleParser } from "mailparser";
 import dynamoDb from "../libs/dynamodb-lib";
 import s3 from "../libs/s3-lib";
@@ -44,5 +45,23 @@ export default {
     const fullEmail = { ...email, bodyHtml: s3Email.html, bodyText: s3Email.text };
 
     return cleanEmail(fullEmail);
+  },
+
+  create: async (bucketName, bucketObjectKey) => {
+    const data = await s3.get({ Bucket: bucketName, Key: bucketObjectKey });
+    const email = await simpleParser(data.Body);
+
+    await dynamoDb.put({
+      TableName: process.env.emailsTableName,
+      Item: {
+        emailId: uuid(),
+        emailAddress: email.to.text,
+        date: email.date.getTime(),
+        subject: email.subject,
+        from: email.from.text,
+        bucketName: bucketName,
+        bucketObjectKey: bucketObjectKey,
+      }
+    });
   }
 };
