@@ -19,29 +19,29 @@ function cleanEmail(email) {
 
 export default {
   list: async (emailAddress) => {
-    const result = await dynamoDb.query({
+    const response = await dynamoDb.query({
       TableName: process.env.emailsTableName,
       IndexName: 'EmailAddressIndex',
       KeyConditionExpression: 'emailAddress = :email_address',
       ExpressionAttributeValues: { ':email_address': emailAddress }
     });
 
-    return result.Items.map((email) => cleanEmail(email));
+    return response.Items.map((email) => cleanEmail(email));
   },
 
   get: async (id) => {
-    const result = await dynamoDb.get({
+    const response = await dynamoDb.get({
       TableName: process.env.emailsTableName,
       Key: { emailId: id }
     });
 
-    const email = result.Item;
+    const email = response.Item;
     if ( ! email) {
       throw new Error("Item not found.");
     }
 
-    const s3Result = getS3(email.bucketName, email.bucketObjectKey);
-    const fullEmail = { ...email, bodyHtml: s3Result.html, bodyText: s3Result.text };
+    const s3Email = getS3(email.bucketName, email.bucketObjectKey);
+    const fullEmail = { ...email, bodyHtml: s3Email.html, bodyText: s3Email.text };
 
     return cleanEmail(fullEmail);
   }

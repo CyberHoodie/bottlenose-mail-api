@@ -1,31 +1,19 @@
-import dynamoDb from "../libs/dynamodb-lib";
+import Inbox from "../libs/inbox-lib";
 
 export async function main(event, context) {
   const record = event.Records[0];
   const toEmailAddress = record.ses.mail.destination[0];
 
   try {
-    const emailExists = await checkEmail(toEmailAddress);
+    const inbox = await Inbox.getByEmailAddress(toEmailAddress);
 
-    if (emailExists) {
-      return { 'disposition': 'CONTINUE' };
-    } else {
+    if ( ! inbox) {
       return { 'disposition': 'STOP_RULE_SET' };
+    } else {
+      return { 'disposition': 'CONTINUE' };
     }
   } catch (Error) {
     console.log(Error, Error.stack);
     return Error;
   }
-}
-
-async function checkEmail(toEmailAddress) {
-  const params = {
-    TableName: process.env.inboxesTableName,
-    IndexName: 'EmailAddressIndex',
-    KeyConditionExpression: 'emailAddress = :email_address',
-    ExpressionAttributeValues: { ':email_address': toEmailAddress}
-  };
-  const results = await dynamoDb.query(params);
-
-  return results.Items.length > 0;
 }

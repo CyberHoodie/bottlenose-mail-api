@@ -27,11 +27,22 @@ export default {
   },
 
   get: async (id) => {
-    const result = await dynamoDb.get({
+    const response = await dynamoDb.get({
       TableName: process.env.inboxesTableName,
       Key: { inboxId: id }
     });
 
-    return result.Item;
+    return response.Item;
+  },
+
+  getByEmailAddress: async (emailAddress) => {
+    const response = await dynamoDb.query({
+      TableName: process.env.inboxesTableName,
+      IndexName: 'EmailAddressIndex',
+      KeyConditionExpression: 'emailAddress = :email_address',
+      ExpressionAttributeValues: { ':email_address': emailAddress}
+    });
+
+    return response.Items.length > 0 ? response.Items[0] : null;
   }
 };
