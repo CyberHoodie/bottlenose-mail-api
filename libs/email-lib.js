@@ -1,67 +1,89 @@
 import { v4 as uuid } from "uuid";
-import { simpleParser } from "mailparser";
-import dynamoDb from "../libs/dynamodb-lib";
-import s3 from "../libs/s3-lib";
+import mailparser, { simpleParser } from "mailparser";
 
-async function getS3(bucketName, bucketObjectKey) {
-  const emailData = await s3.get({
-    Bucket: bucketName,
-    Key: bucketObjectKey
-  });
+export default class Email {
+  constructor(database, fileStorage, tableName) {
+    this.tableName = tableName;
+    this.fileStorage = fileStorage;
+    this.database = database;
+  }
 
-  return await simpleParser(emailData.Body);
-}
-
-function cleanEmail(email) {
-  // eslint-disable-next-line no-unused-vars
-  const { bucketName, bucketObjectKey, ...cleanedEmail} = email;
-  return cleanedEmail;
-}
-
-export default {
-  list: async (emailAddress) => {
-    const response = await dynamoDb.query({
-      TableName: process.env.emailsTableName,
+  list(emailAddress) {
+    return this.database.query({
+      TableName: this.tableName,
       IndexName: 'EmailAddressIndex',
       KeyConditionExpression: 'emailAddress = :email_address',
       ExpressionAttributeValues: { ':email_address': emailAddress }
-    });
+    }).promise()
+      .then((response) => (
+        response.Items.map((email) => this.cleanEmail(email))
+      ));
+  }
 
-    return response.Items.map((email) => cleanEmail(email));
-  },
-
-  get: async (id) => {
-    const response = await dynamoDb.get({
+  get(id) {
+    return this.database.get({
       TableName: process.env.emailsTableName,
       Key: { emailId: id }
-    });
+    }).promise()
+      .then((response) => {
+        const email = response.Item;
+        if ( ! email) {
+          throw new Error("Item not found.");
+        }
 
-    const email = response.Item;
-    if ( ! email) {
-      throw new Error("Item not found.");
-    }
+        return this.getEmailFile(email.bucketName, email.bucketObjectKey)
+          .then((s3Email) => {
+            const fullEmail = {
+              ...email,
+              bodyHtml: s3Email.html,
+              bodyText: s3Email.text
+            };
 
-    const s3Email = getS3(email.bucketName, email.bucketObjectKey);
-    const fullEmail = { ...email, bodyHtml: s3Email.html, bodyText: s3Email.text };
-
-    return cleanEmail(fullEmail);
-  },
-
-  create: async (bucketName, bucketObjectKey) => {
-    const data = await s3.get({ Bucket: bucketName, Key: bucketObjectKey });
-    const email = await simpleParser(data.Body);
-
-    await dynamoDb.put({
-      TableName: process.env.emailsTableName,
-      Item: {
-        emailId: uuid(),
-        emailAddress: email.to.text,
-        date: email.date.getTime(),
-        subject: email.subject,
-        from: email.from.text,
-        bucketName: bucketName,
-        bucketObjectKey: bucketObjectKey,
-      }
-    });
+            return this.cleanEmail(fullEmail);
+          });
+      });
   }
-};
+
+  create(bucketName, bucketObjectKey) {
+    return this.fileStorage.getObject({
+      Bucket: bucketName,
+      Key: bucketObjectKey
+    }).promise()
+      .then((data) => {
+        return simpleParser(data.Body)
+          .then((email) => {
+            return this.database.put({
+              TableName: this.tableName,
+              Item: {
+                emailId: uuid(),
+                emailAddress: email.to.text,
+                date: email.date.getTime(),
+                subject: email.subject,
+                from: email.from.text,
+                bucketName: bucketName,
+                bucketObjectKey: bucketObjectKey,
+              }
+            }).promise();
+          });
+      });
+  }
+
+  getEmailFile(bucketName, bucketObjectKey) {
+    return this.fileStorage.getObject({
+      Bucket: bucketName,
+      Key: bucketObjectKey
+    }).promise()
+      .then((response) => {
+        return mailparser.simpleParser(response.Body)
+          .then((parsed) => {
+            return parsed;
+          });
+      });
+  }
+
+  cleanEmail(email) {
+    // eslint-disable-next-line no-unused-vars
+    const { bucketName, bucketObjectKey, ...cleanedEmail} = email;
+    return cleanedEmail;
+  }
+}

@@ -12,9 +12,12 @@ export const main = handler(async (event, context) => {
     throw new Error("Inbox ID is missing.");
   }
 
-  const client = new AWS.DynamoDB.DocumentClient;
-  const inbox = new Inbox(client, process.env.inboxesTableName, process.env.stage);
+  const dynamoDbClient = new AWS.DynamoDB.DocumentClient;
+  const inbox = new Inbox(dynamoDbClient, process.env.inboxesTableName, process.env.stage);
   const inboxResult = await inbox.get(inboxId);
 
-  return await Email.list(inboxResult.emailAddress);
+  const s3Client = new AWS.S3;
+  const email = new Email(dynamoDbClient, s3Client, process.env.inboxesTableName);
+
+  return await email.list(inboxResult.emailAddress);
 });
