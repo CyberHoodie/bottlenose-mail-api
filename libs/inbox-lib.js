@@ -1,48 +1,53 @@
 import { v4 as uuid } from "uuid";
 import { nanoid } from "nanoid";
-import dynamoDb from "../libs/dynamodb-lib";
+// import dynamoDb from "../libs/dynamodb-lib";
 
-function setEmailDomain() {
-  if (process.env.stage == "prod") {
-    return "bottlenosemail.com";
-  } else {
-    return "bottlenosemail-dev.com";
+export default class Inbox {
+  constructor(database, tableName, stage) {
+    this.tableName = tableName;
+    this.database = database;
+    this.stage = stage;
   }
-}
 
-export default {
-  create: async () => {
+  create() {
     const item = {
       inboxId: uuid(),
-      emailAddress: `${nanoid(10).toLowerCase()}@${setEmailDomain()}`,
+      emailAddress: `${nanoid(10).toLowerCase()}@${this.emailDomain()}`,
       createdAt: Date.now()
     };
 
-    await dynamoDb.put({
-      TableName: process.env.inboxesTableName,
+    return this.database.put({
+      TableName: this.tableName,
       Item: item
-    });
+    }).promise()
+      .then(() => item);
+  }
 
-    return item;
-  },
-
-  get: async (id) => {
-    const response = await dynamoDb.get({
-      TableName: process.env.inboxesTableName,
+  get(id) {
+    return this.database.get({
+      TableName: this.tableName,
       Key: { inboxId: id }
-    });
+    }).promise()
+      .then((response) => response.Item);
+  }
 
-    return response.Item;
-  },
-
-  getByEmailAddress: async (emailAddress) => {
-    const response = await dynamoDb.query({
-      TableName: process.env.inboxesTableName,
+  getByEmailAddress(emailAddress) {
+    return this.database.query({
+      TableName: this.tableName,
       IndexName: 'EmailAddressIndex',
       KeyConditionExpression: 'emailAddress = :email_address',
       ExpressionAttributeValues: { ':email_address': emailAddress}
-    });
-
-    return response.Items.length > 0 ? response.Items[0] : null;
+    }).promise()
+      .then((response) => (
+        response.Items.length > 0 ? response.Items[0] : null
+      ));
   }
-};
+
+  emailDomain() {
+    if (this.stage == "prod") {
+      return "bottlenosemail.com";
+    } else {
+      return "bottlenosemail-dev.com";
+    }
+  }
+}

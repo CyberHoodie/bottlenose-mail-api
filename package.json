@@ -8,8 +8,10 @@
   },
   "devDependencies": {
     "aws-sdk": "^2.748.0",
+    "aws-sdk-mock": "^5.1.0",
     "serverless-bundle": "^3.1.0",
     "serverless-dotenv-plugin": "^3.0.0",
+    "serverless-jest-plugin": "^0.3.0",
     "serverless-offline": "^6.7.0"
   },
   "dependencies": {

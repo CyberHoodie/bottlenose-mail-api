@@ -1,3 +1,4 @@
+import AWS from "aws-sdk";
 import Inbox from "../libs/inbox-lib";
 
 export async function main(event, context) {
@@ -5,9 +6,11 @@ export async function main(event, context) {
   const toEmailAddress = record.ses.mail.destination[0];
 
   try {
-    const inbox = await Inbox.getByEmailAddress(toEmailAddress);
+    const client = new AWS.DynamoDB.DocumentClient;
+    const inbox = new Inbox(client, process.env.inboxesTableName, process.env.stage);
+    const result = await inbox.getByEmailAddress(toEmailAddress);
 
-    if ( ! inbox) {
+    if ( ! result) {
       return { 'disposition': 'STOP_RULE_SET' };
     } else {
       return { 'disposition': 'CONTINUE' };

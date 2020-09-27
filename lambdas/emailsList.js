@@ -1,3 +1,4 @@
+import AWS from "aws-sdk";
 import handler from "../libs/handler-lib";
 import Inbox from "../libs/inbox-lib";
 import Email from "../libs/email-lib";
@@ -11,6 +12,9 @@ export const main = handler(async (event, context) => {
     throw new Error("Inbox ID is missing.");
   }
 
-  const inbox = await Inbox.get(inboxId);
-  return await Email.list(inbox.emailAddress);
+  const client = new AWS.DynamoDB.DocumentClient;
+  const inbox = new Inbox(client, process.env.inboxesTableName, process.env.stage);
+  const inboxResult = await inbox.get(inboxId);
+
+  return await Email.list(inboxResult.emailAddress);
 });
