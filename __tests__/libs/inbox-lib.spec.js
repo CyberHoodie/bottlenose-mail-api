@@ -21,9 +21,7 @@ describe('#Inbox', () => {
 
   describe('#create', () => {
     beforeAll(() => {
-      AWSMock.mock('DynamoDB.DocumentClient', 'put', Promise.resolve().then((params) => (
-        { Item: params }
-      )));
+      AWSMock.mock('DynamoDB.DocumentClient', 'put');
     });
 
     afterAll(() => {

@@ -21,51 +21,54 @@ export default class Email {
   }
 
   get(id) {
+    let email;
     return this.database.get({
-      TableName: process.env.emailsTableName,
+      TableName: this.tableName,
       Key: { emailId: id }
     }).promise()
       .then((response) => {
-        const email = response.Item;
+        email = response.Item;
         if ( ! email) {
           throw new Error("Item not found.");
         }
 
-        return this.getEmailFile(email.bucketName, email.bucketObjectKey)
-          .then((s3Email) => {
-            const fullEmail = {
-              ...email,
-              bodyHtml: s3Email.html,
-              bodyText: s3Email.text
-            };
+        return this.getEmailFile(email.bucketName, email.bucketObjectKey);
+      })
+      .then((s3Email) => {
+        const fullEmail = {
+          ...email,
+          bodyHtml: s3Email.html,
+          bodyText: s3Email.text
+        };
 
-            return this.cleanEmail(fullEmail);
-          });
+        return this.cleanEmail(fullEmail);
       });
   }
 
   create(bucketName, bucketObjectKey) {
+    let item;
     return this.fileStorage.getObject({
       Bucket: bucketName,
       Key: bucketObjectKey
     }).promise()
-      .then((data) => {
-        return simpleParser(data.Body)
-          .then((email) => {
-            return this.database.put({
-              TableName: this.tableName,
-              Item: {
-                emailId: uuid(),
-                emailAddress: email.to.text,
-                date: email.date.getTime(),
-                subject: email.subject,
-                from: email.from.text,
-                bucketName: bucketName,
-                bucketObjectKey: bucketObjectKey,
-              }
-            }).promise();
-          });
-      });
+      .then((data) => simpleParser(data.Body))
+      .then((email) => {
+        item = {
+          emailId: uuid(),
+          emailAddress: email.to.text,
+          date: email.date.getTime(),
+          subject: email.subject,
+          from: email.from.text,
+          bucketName: bucketName,
+          bucketObjectKey: bucketObjectKey,
+        };
+
+        return this.database.put({
+          TableName: this.tableName,
+          Item: item,
+        }).promise()
+      })
+      .then(() => item);
   }
 
   getEmailFile(bucketName, bucketObjectKey) {
@@ -73,12 +76,7 @@ export default class Email {
       Bucket: bucketName,
       Key: bucketObjectKey
     }).promise()
-      .then((response) => {
-        return mailparser.simpleParser(response.Body)
-          .then((parsed) => {
-            return parsed;
-          });
-      });
+      .then((response) => mailparser.simpleParser(response.Body));
   }
 
   cleanEmail(email) {

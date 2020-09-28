@@ -1,6 +1,5 @@
 import { v4 as uuid } from "uuid";
 import { nanoid } from "nanoid";
-// import dynamoDb from "../libs/dynamodb-lib";
 
 export default class Inbox {
   constructor(database, tableName, stage) {
