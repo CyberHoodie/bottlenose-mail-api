@@ -66,37 +66,37 @@ provider:
 
 functions:
   inboxesCreate:
-    handler: lambdas/inboxesCreate.main
+    handler: handlers/inboxesCreate.main
     events:
       - http:
           path: inboxes
           method: post
           cors: true
   inboxesGet:
-    handler: lambdas/inboxesGet.main
+    handler: handlers/inboxesGet.main
     events:
       - http:
           path: inboxes/{id}
           method: get
           cors: true
   emailsList:
-    handler: lambdas/emailsList.main
+    handler: handlers/emailsList.main
     events:
       - http:
           path: emails
           method: get
           cors: true
   emailsGet:
-    handler: lambdas/emailsGet.main
+    handler: handlers/emailsGet.main
     events:
       - http:
           path: emails/{id}
           method: get
           cors: true
   emailAddressCheck:
-    handler: lambdas/emailAddressCheck.main
+    handler: handlers/emailAddressCheck.main
   processEmail:
-    handler: lambdas/processEmail.main
+    handler: handlers/processEmail.main
     events:
       - s3:
           bucket: ${self:custom.emailsBucketName}
