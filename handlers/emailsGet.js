@@ -7,9 +7,6 @@ export const main = handler(async (event, context) => {
   const s3Client = new AWS.S3;
   const email = new Email(dynamoDbClient, s3Client, process.env.inboxesTableName);
   const result = await email.get(event.pathParameters.id);
-  if ( ! result) {
-    throw new Error("Email not found.");
-  }
 
   return result;
 });

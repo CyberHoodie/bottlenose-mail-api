@@ -2,6 +2,7 @@ import AWS from "aws-sdk";
 import AWSMock from "aws-sdk-mock";
 import { validate as uuidVvalidate } from "uuid";
 import Email from "../../libs/email-lib";
+import { NotFoundError } from "../../libs/error-lib";
 
 AWSMock.setSDKInstance(AWS);
 
@@ -68,7 +69,7 @@ describe('#Email', () => {
   });
 
   describe('#get', () => {
-    beforeAll(() => {
+    beforeEach(() => {
       AWSMock.mock('DynamoDB.DocumentClient', 'get', Promise.resolve().then((_params) => ({
         Item: {
           foo: 'bar',
@@ -82,7 +83,7 @@ describe('#Email', () => {
       )));
     });
 
-    afterAll(() => {
+    afterEach(() => {
       AWSMock.restore("DynamoDB.DocumentClient");
       AWSMock.restore("S3");
     });
@@ -100,6 +101,22 @@ describe('#Email', () => {
           expect(result.foo).toEqual("bar");
         });
     });
+
+    it('throws an error if an email is not found', () => {
+      AWSMock.restore("DynamoDB.DocumentClient");
+      AWSMock.mock('DynamoDB.DocumentClient', 'get', Promise.resolve().then((_params) => ({
+        Item: null
+      })));
+
+      const email = new Email(
+        new AWS.DynamoDB.DocumentClient,
+        new AWS.S3,
+        'emailsTestTable'
+      );
+
+      expect(email.get('non-existant-uuid'))
+        .rejects.toThrow(expect.objectContaining({ statusCode: 404 }));
+    })
 
     it('combines DynamoDB and S3 email information', () => {
       const mockedEmail = { text: 'Hi!', html: '<h1>Hi!</h1>' };

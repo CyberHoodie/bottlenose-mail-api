@@ -1,5 +1,6 @@
 import { v4 as uuid } from "uuid";
-import mailparser, { simpleParser } from "mailparser";
+import { simpleParser } from "mailparser";
+import { NotFoundError } from "./error-lib";
 
 export default class Email {
   constructor(database, fileStorage, tableName) {
@@ -29,7 +30,7 @@ export default class Email {
       .then((response) => {
         email = response.Item;
         if ( ! email) {
-          throw new Error("Item not found.");
+          throw new NotFoundError("Email not found.");
         }
 
         return this.getEmailFile(email.bucketName, email.bucketObjectKey);
@@ -76,7 +77,7 @@ export default class Email {
       Bucket: bucketName,
       Key: bucketObjectKey
     }).promise()
-      .then((response) => mailparser.simpleParser(response.Body));
+      .then((response) => simpleParser(response.Body));
   }
 
   cleanEmail(email) {

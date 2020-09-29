@@ -1,5 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { nanoid } from "nanoid";
+import { NotFoundError } from "./error-lib";
 
 export default class Inbox {
   constructor(database, tableName, stage) {
@@ -27,7 +28,12 @@ export default class Inbox {
       TableName: this.tableName,
       Key: { inboxId: id }
     }).promise()
-      .then((response) => response.Item);
+      .then((response) => {
+        if ( ! response.Item) {
+          throw new NotFoundError("Inbox not found.");
+        }
+        return response.Item
+      });
   }
 
   getByEmailAddress(emailAddress) {

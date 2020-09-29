@@ -60,6 +60,18 @@ describe('#Inbox', () => {
           expect(result.foo).toEqual("bar");
         });
     });
+
+    it('throws an error if an inbox is not found', () => {
+      AWSMock.restore("DynamoDB.DocumentClient");
+      AWSMock.mock('DynamoDB.DocumentClient', 'get', Promise.resolve().then((_params) => ({
+        Item: null
+      })));
+
+      const inbox = new Inbox(new AWS.DynamoDB.DocumentClient, 'inboxesTestTable', 'test');
+
+      expect(inbox.get('non-existant-uuid'))
+        .rejects.toThrow(expect.objectContaining({ statusCode: 404 }));
+    })
   });
 
   describe('#getByEmailAddress', () => {
