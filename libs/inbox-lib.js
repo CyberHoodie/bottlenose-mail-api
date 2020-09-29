@@ -32,7 +32,7 @@ export default class Inbox {
         if ( ! response.Item) {
           throw new NotFoundError("Inbox not found.");
         }
-        return response.Item
+        return response.Item;
       });
   }
 

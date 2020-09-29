@@ -71,7 +71,7 @@ export default class Email {
         return this.database.put({
           TableName: this.tableName,
           Item: item,
-        }).promise()
+        }).promise();
       })
       .then(() => item);
   }
