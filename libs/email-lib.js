@@ -1,6 +1,7 @@
 import { v4 as uuid } from "uuid";
 import { simpleParser } from "mailparser";
 import { NotFoundError } from "./error-lib";
+import Inbox from "./inbox-lib";
 
 export default class Email {
   constructor(database, fileStorage, tableName) {
@@ -9,13 +10,16 @@ export default class Email {
     this.database = database;
   }
 
-  list(emailAddress) {
-    return this.database.query({
-      TableName: this.tableName,
-      IndexName: 'EmailAddressIndex',
-      KeyConditionExpression: 'emailAddress = :email_address',
-      ExpressionAttributeValues: { ':email_address': emailAddress }
-    }).promise()
+  list(inboxId, inboxesTableName, stage) {
+    return new Inbox(this.database, inboxesTableName, stage).get(inboxId)
+      .then((result) => (
+        this.database.query({
+          TableName: this.tableName,
+          IndexName: 'EmailAddressIndex',
+          KeyConditionExpression: 'emailAddress = :email_address',
+          ExpressionAttributeValues: { ':email_address': result.emailAddress }
+        }).promise()
+      ))
       .then((response) => (
         response.Items.map((email) => this.cleanEmail(email))
       ));

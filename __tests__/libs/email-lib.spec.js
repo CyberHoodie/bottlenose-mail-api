@@ -30,13 +30,25 @@ describe('#Email', () => {
   });
 
   describe('#list', () => {
-    beforeAll(() => {
-      AWSMock.mock('DynamoDB.DocumentClient', 'query', Promise.resolve().then((params) => (
+    let getObjectMock;
+    let queryObjectMock;
+
+    beforeEach(() => {
+      getObjectMock = jest.fn(() => (
+        { Item: { emailAddress: 'list@example.com' } }
+      ));
+      queryObjectMock = jest.fn(() => (
         { Items: [{ foo: "bar",  bucketName: "bucketname", bucketObjectKey: "bucketkey"}] }
-      )));
+      ));
+      AWSMock.mock('DynamoDB.DocumentClient', 'get', (params, callback) => {
+        callback(null, getObjectMock(params));
+      });
+      AWSMock.mock('DynamoDB.DocumentClient', 'query', (params, callback) => {
+        callback(null, queryObjectMock(params));
+      });
     });
 
-    afterAll(() => {
+    afterEach(() => {
       AWSMock.restore("DynamoDB.DocumentClient");
     });
 
@@ -47,11 +59,30 @@ describe('#Email', () => {
         'emailsTestTable'
       );
 
-      return email.list('any@example.com')
+      return email.list('inboxId', 'inboxesTestTable', 'test')
         .then((result) => {
           expect(Array.isArray(result)).toBe(true);
         });
     });
+
+    it('finds emails based on inboxId', () => {
+      const email = new Email(
+        new AWS.DynamoDB.DocumentClient,
+        new AWS.S3,
+        'emailsTestTable'
+      );
+
+      return email.list('inbox-uuid', 'inboxesTestTable', 'test')
+        .then((result) => {
+          expect(getObjectMock).toBeCalledWith(
+            expect.objectContaining({ Key: { inboxId: 'inbox-uuid' } })
+          );
+
+          expect(queryObjectMock).toBeCalledWith(
+            expect.objectContaining({ ExpressionAttributeValues: { ':email_address': 'list@example.com' } })
+          );
+        });
+    })
 
     it('does not return bucket information with the email', () => {
       const email = new Email(
@@ -60,7 +91,7 @@ describe('#Email', () => {
         'emailsTestTable'
       );
 
-      return email.list('any@example.com')
+      return email.list('inboxId', 'inboxesTestTable', 'test')
         .then((result) => {
           expect(result[0]).not.toHaveProperty("bucketName");
           expect(result[0]).not.toHaveProperty("bucketObjectKey");
