@@ -10,16 +10,13 @@ export default class Email {
     this.database = database;
   }
 
-  list(inboxId, inboxesTableName, stage) {
-    return new Inbox(this.database, inboxesTableName, stage).get(inboxId)
-      .then((result) => (
-        this.database.query({
-          TableName: this.tableName,
-          IndexName: 'EmailAddressIndex',
-          KeyConditionExpression: 'emailAddress = :email_address',
-          ExpressionAttributeValues: { ':email_address': result.emailAddress }
-        }).promise()
-      ))
+  list(inboxId) {
+    return this.database.query({
+      TableName: this.tableName,
+      IndexName: 'InboxIdIndex',
+      KeyConditionExpression: 'inboxId = :inbox_id',
+      ExpressionAttributeValues: { ':inbox_id': inboxId }
+    }).promise()
       .then((response) => (
         response.Items.map((email) => this.cleanEmail(email))
       ));
@@ -50,8 +47,9 @@ export default class Email {
       });
   }
 
-  create(bucketName, bucketObjectKey) {
+  create(bucketName, bucketObjectKey, inboxesTableName, stage) {
     let item;
+
     return this.fileStorage.getObject({
       Bucket: bucketName,
       Key: bucketObjectKey
@@ -67,6 +65,17 @@ export default class Email {
           bucketName: bucketName,
           bucketObjectKey: bucketObjectKey,
         };
+      })
+      .then(() => {
+        const inbox = new Inbox(this.database, inboxesTableName, stage);
+        return inbox.getByEmailAddress(item.emailAddress);
+      })
+      .then((inbox) => {
+        if ( ! inbox) {
+          throw new Error("Email creation attempted without a valid inbox.");
+        }
+
+        item = { ...item, inboxId: inbox.inboxId };
 
         return this.database.put({
           TableName: this.tableName,

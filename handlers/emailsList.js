@@ -13,7 +13,7 @@ export const main = handler(async (event, context) => {
 
   const dynamoDbClient = new AWS.DynamoDB.DocumentClient;
   const s3Client = new AWS.S3;
-  const email = new Email(dynamoDbClient, s3Client, process.env.inboxesTableName);
+  const email = new Email(dynamoDbClient, s3Client, process.env.emailsTableName);
 
-  return await email.list(inboxId, process.env.inboxesTableName, process.env.stage);
+  return await email.list(inboxId);
 });

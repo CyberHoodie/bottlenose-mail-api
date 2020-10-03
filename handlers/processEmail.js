@@ -9,7 +9,7 @@ export async function main(event, context) {
     const s3Client = new AWS.S3;
     const email = new Email(dynamoDbClient, s3Client, process.env.emailsTableName);
 
-    email.create(record.s3.bucket.name, record.s3.object.key);
+    email.create(record.s3.bucket.name, record.s3.object.key, process.env.inboxesTableName, process.env.stage);
   } catch (Error) {
     console.log(Error, Error.stack);
     return Error;

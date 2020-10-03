@@ -41,7 +41,7 @@ export default class Inbox {
       TableName: this.tableName,
       IndexName: 'EmailAddressIndex',
       KeyConditionExpression: 'emailAddress = :email_address',
-      ExpressionAttributeValues: { ':email_address': emailAddress}
+      ExpressionAttributeValues: { ':email_address': emailAddress }
     }).promise()
       .then((response) => (
         response.Items.length > 0 ? response.Items[0] : null
