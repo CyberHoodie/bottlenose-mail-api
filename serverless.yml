@@ -101,6 +101,10 @@ functions:
       - s3:
           bucket: ${self:custom.emailsBucketName}
           event: s3:ObjectCreated:*
+  inboxesDeleteExpired:
+    handler: handlers/inboxesDeleteExpired.main
+    events:
+      - schedule: cron(0 0 * * * *)
 
 resources:
   # DynamoDB
