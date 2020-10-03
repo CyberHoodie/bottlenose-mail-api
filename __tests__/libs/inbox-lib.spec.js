@@ -16,7 +16,8 @@ describe('#Inbox', () => {
 
     expect(typeof inbox.create).toBe('function');
     expect(typeof inbox.get).toBe('function');
-    expect(typeof inbox.getByEmailAddress).toBe('function');
+    expect(typeof inbox.emailDomain).toBe('function');
+    expect(typeof inbox.findOldInboxes).toBe('function');
   });
 
   describe('#create', () => {
@@ -118,4 +119,41 @@ describe('#Inbox', () => {
       expect(inbox.emailDomain()).toBe('bottlenosemail-dev.com');
     });
   });
+
+  describe('#findOldInboxes', () => {
+    let queryObjectMock;
+
+    beforeEach(() => {
+      queryObjectMock = jest.fn(() => ({ Items: [{ foo: "bar" }] }));
+      AWSMock.mock('DynamoDB.DocumentClient', 'query', (params, callback) => {
+        callback(null, queryObjectMock(params));
+      });
+    });
+
+    afterEach(() => {
+      AWSMock.restore("DynamoDB.DocumentClient");
+    });
+
+    it('returns a list of items', () => {
+      const inbox = new Inbox(new AWS.DynamoDB.DocumentClient, 'inboxesTestTable', 'test');
+
+      return inbox.findOldInboxes()
+        .then((result) => {
+          expect(Array.isArray(result)).toBe(true);
+        });
+    });
+
+    it('finds inboxes older than current time', () => {
+      const inbox = new Inbox(new AWS.DynamoDB.DocumentClient, 'inboxesTestTable', 'test');
+
+      return inbox.findOldInboxes()
+        .then((_result) => {
+          expect(queryObjectMock).toBeCalledWith(
+            expect.objectContaining({
+              KeyConditionExpression: 'createdAt LT :current_date'
+            })
+          );
+        });
+    })
+  })
 });

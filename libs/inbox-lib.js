@@ -55,4 +55,14 @@ export default class Inbox {
       return "bottlenosemail-dev.com";
     }
   }
+
+  findOldInboxes() {
+    return this.database.query({
+      TableName: this.tableName,
+      IndexName: 'CreatedAtIndex',
+      KeyConditionExpression: 'createdAt LT :current_date',
+      ExpressionAttributeValues: { ':current_date': Date.now }
+    }).promise()
+      .then((response) => response.Items);
+  }
 }
