@@ -65,4 +65,11 @@ export default class Inbox {
     }).promise()
       .then((response) => response.Items);
   }
+
+  delete(id) {
+    return this.database.delete({
+      TableName: this.tableName,
+      Key: { inboxId: id }
+    }).promise()
+  }
 }

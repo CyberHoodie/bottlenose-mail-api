@@ -26,6 +26,7 @@ describe('#Email', () => {
     expect(typeof email.list).toBe('function');
     expect(typeof email.get).toBe('function');
     expect(typeof email.create).toBe('function');
+    expect(typeof email.delete).toBe('function');
   });
 
   describe('#list', () => {
@@ -259,4 +260,57 @@ describe('#Email', () => {
         });
     });
   });
+
+  describe('#delete', () => {
+    let deleteDynamoDbObjectMock;
+    let deleteS3ObjectMock;
+    let deletedItem;
+
+    beforeEach(() => {
+      deletedItem = { emailId: 'email-uuid', bucketName: 'bucketname', bucketObjectKey: 'bucketkey' };
+      deleteDynamoDbObjectMock = jest.fn(() => ({ Item: deletedItem }));
+      deleteS3ObjectMock = jest.fn(() => ({}));
+
+      AWSMock.mock('DynamoDB.DocumentClient', 'delete', (params, callback) => callback(null, deleteDynamoDbObjectMock(params)));
+      AWSMock.mock('S3', 'deleteObject', (params, callback) => callback(null, deleteS3ObjectMock(params)));
+    });
+
+    afterEach(() => {
+      AWSMock.restore("DynamoDB.DocumentClient");
+      AWSMock.restore("S3");
+    });
+
+    it('deletes an email from dynamodb', () => {
+      const email = new Email(
+        new AWS.DynamoDB.DocumentClient,
+        new AWS.S3,
+        'emailsTestTable'
+      );
+
+      return email.delete(deletedItem.emailId)
+        .then((_result) => {
+          expect(deleteDynamoDbObjectMock).toBeCalledWith(
+            expect.objectContaining({ Key: { emailId: deletedItem.emailId } })
+          );
+        });
+    })
+
+    it('deletes an email from s3', () => {
+      const email = new Email(
+        new AWS.DynamoDB.DocumentClient,
+        new AWS.S3,
+        'emailsTestTable'
+      );
+
+      return email.delete(deletedItem.emailId)
+        .then((_result) => {
+          expect(deleteS3ObjectMock).toBeCalledWith(
+            expect.objectContaining({
+              Bucket: deletedItem.bucketName,
+              Key: deletedItem.bucketObjectKey
+            })
+          );
+        });
+    })
+  })
 });

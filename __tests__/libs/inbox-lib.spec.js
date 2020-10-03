@@ -18,6 +18,7 @@ describe('#Inbox', () => {
     expect(typeof inbox.get).toBe('function');
     expect(typeof inbox.emailDomain).toBe('function');
     expect(typeof inbox.findOldInboxes).toBe('function');
+    expect(typeof inbox.delete).toBe('function');
   });
 
   describe('#create', () => {
@@ -152,6 +153,32 @@ describe('#Inbox', () => {
             expect.objectContaining({
               KeyConditionExpression: 'createdAt LT :current_date'
             })
+          );
+        });
+    })
+  })
+
+  describe('#delete', () => {
+    let deleteObjectMock;
+
+    beforeAll(() => {
+      deleteObjectMock = jest.fn(() => ({}));
+      AWSMock.mock('DynamoDB.DocumentClient', 'delete', (params, callback) => {
+        callback(null, deleteObjectMock(params));
+      });
+    })
+
+    afterAll(() => {
+      AWSMock.restore("DynamoDB.DocumentClient");
+    })
+
+    it('deletes an inbox from dynamodb', () => {
+      const inbox = new Inbox(new AWS.DynamoDB.DocumentClient, 'inboxesTestTable', 'test');
+
+      return inbox.delete('inbox-uuid')
+        .then((_result) => {
+          expect(deleteObjectMock).toBeCalledWith(
+            expect.objectContaining({ Key: { inboxId: 'inbox-uuid' } })
           );
         });
     })
