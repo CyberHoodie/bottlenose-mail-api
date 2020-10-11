@@ -57,11 +57,10 @@ export default class Inbox {
   }
 
   findOldInboxes() {
-    return this.database.query({
+    return this.database.scan({
       TableName: this.tableName,
-      IndexName: 'CreatedAtIndex',
-      KeyConditionExpression: 'createdAt LT :current_date',
-      ExpressionAttributeValues: { ':current_date': Date.now }
+      FilterExpression: 'createdAt < :current_date',
+      ExpressionAttributeValues: { ':current_date': Date.now() }
     }).promise()
       .then((response) => response.Items);
   }

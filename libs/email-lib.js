@@ -103,13 +103,13 @@ export default class Email {
     return this.database.delete({
       TableName: this.tableName,
       Key: { emailId: id },
-      ReturnValues: 'UPDATED_OLD'
+      ReturnValues: 'ALL_OLD'
     }).promise()
       .then((response) => {
         return this.fileStorage.deleteObject({
-          Bucket: response.Item.bucketName,
-          Key: response.Item.bucketObjectKey
-        });
+          Bucket: response.Attributes.bucketName,
+          Key: response.Attributes.bucketObjectKey
+        }).promise();
       });
   }
 }
