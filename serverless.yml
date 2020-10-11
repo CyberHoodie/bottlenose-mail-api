@@ -104,7 +104,7 @@ functions:
   inboxesDeleteExpired:
     handler: handlers/inboxesDeleteExpired.main
     events:
-      - schedule: cron(0 0 * * * *)
+      - schedule: cron(0 0 * * ? *)
 
 resources:
   # DynamoDB
