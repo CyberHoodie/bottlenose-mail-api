@@ -98,4 +98,18 @@ export default class Email {
     const { bucketName, bucketObjectKey, ...cleanedEmail} = email;
     return cleanedEmail;
   }
+
+  delete(id) {
+    return this.database.delete({
+      TableName: this.tableName,
+      Key: { emailId: id },
+      ReturnValues: 'UPDATED_OLD'
+    }).promise()
+      .then((response) => {
+        return this.fileStorage.deleteObject({
+          Bucket: response.Item.bucketName,
+          Key: response.Item.bucketObjectKey
+        });
+      });
+  }
 }
