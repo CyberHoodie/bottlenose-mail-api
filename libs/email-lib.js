@@ -82,7 +82,7 @@ export default class Email {
           Item: item,
         }).promise();
       })
-      .then(() => item);
+      .then((response) => response.Attributes);
   }
 
   getEmailFile(bucketName, bucketObjectKey) {
