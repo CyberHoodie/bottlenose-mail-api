@@ -8,7 +8,7 @@ export default function handler(lambda) {
       statusCode = 200;
     } catch (e) {
       body = { error: e.message };
-      statusCode = 500;
+      statusCode = e.statusCode || 500;
     }
 
     // Return HTTP response
