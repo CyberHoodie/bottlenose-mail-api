@@ -70,6 +70,6 @@ export default class Inbox {
     return this.database.delete({
       TableName: this.tableName,
       Key: { inboxId: id }
-    }).promise()
+    }).promise();
   }
 }
