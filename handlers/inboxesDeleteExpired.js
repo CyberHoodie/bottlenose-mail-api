@@ -15,9 +15,9 @@ export async function main(event, context) {
         inboxes.forEach(({ inboxId }) => {
           inbox.delete(inboxId);
           email.list(inboxId).then((emails) => {
-            emails.forEach(({ emailId }) => email.delete(emailId))
-          })
-        })
+            emails.forEach(({ emailId }) => email.delete(emailId));
+          });
+        });
       });
   } catch (Error) {
     console.log(Error, Error.stack);
