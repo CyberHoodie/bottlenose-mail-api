@@ -35,6 +35,7 @@ provider:
     - Effect: Allow
       Action:
         - s3:GetObject
+        - s3:DeleteObject
       Resource: "*"
     - Effect: Allow
       Action:
@@ -105,7 +106,7 @@ functions:
     handler: handlers/inboxesDeleteExpired.main
     events:
       - schedule:
-          rate: cron(0 0 * * ? *)
+          rate: cron(0/5 * * * ? *)
           enabled: true
 
 resources:
